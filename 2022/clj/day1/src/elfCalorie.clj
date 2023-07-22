@@ -13,3 +13,4 @@
 (defn -main []
   (println (reduce max elf-calories))
   (println (reduce + (take 3 (sort > elf-calories)))))
+
