@@ -46,7 +46,7 @@
     0))
 
 (defn solve-day2 []
-  (let [input (->> (str/split-lines (slurp "input2.txt"))
+  (let [input (->> (str/split-lines (slurp "src/advent/inputs/input2.txt"))
                    (filter (fn [x] x)))]
     (println (calculate-score input))
     (println (calculate-score-two input))))
