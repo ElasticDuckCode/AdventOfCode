@@ -1,9 +1,11 @@
 (ns advent.core
   (:gen-class)
-  (:require [advent.day1 :as day1])
-  (:require [advent.day2 :as day2])
-  (:require [advent.day3 :as day3])
-  (:require [advent.day4 :as day4]))
+  (:require [advent.day1 :as day1]
+            [advent.day2 :as day2]
+            [advent.day3 :as day3]
+            [advent.day4 :as day4]
+            [advent.day5 :as day5]
+            [advent.day6 :as day6]))
 
 (defn -main []
   (println "day1: ")
@@ -13,5 +15,9 @@
   (println "\nday3: ")
   (day3/solve-day3)
   (println "\nday4: ")
-  (day4/solve-day4))
+  (day4/solve-day4)
+  (println "\nday5: ")
+  (day5/solve-day5)
+  (println "\nday6: ")
+  (day6/solve-day6))
 
