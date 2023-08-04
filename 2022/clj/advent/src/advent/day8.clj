@@ -8,8 +8,6 @@
                           zeros
                           reduce-matrix]]))
 
-(load "matrix")
-
 ;; helpers
 (defn build-grid [input]
   (->> input
