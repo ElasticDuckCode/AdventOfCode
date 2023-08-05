@@ -27,6 +27,11 @@
 (defn remove-at [v ith]
   (into (subvec v 0 ith) (subvec v (inc ith))))
 
-(defn reduce-matrix [func matrix]
-  (reduce func (mapv #(reduce func %) matrix)))
+(defn reduce-matrix [f matrix]
+  (reduce f (mapv #(reduce f %) matrix)))
 
+(defn sign [n]
+  (let [sign-fn (fn [x] (if (neg? x) -1 (if (pos-int? x) 1 0)))]
+    (if (coll? n)
+      (mapv #(sign %) n)
+      (sign-fn n))))

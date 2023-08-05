@@ -7,7 +7,8 @@
             [advent.day5 :as day5]
             [advent.day6 :as day6]
             [advent.day7 :as day7]
-            [advent.day8 :as day8]))
+            [advent.day8 :as day8]
+            [advent.day9 :as day9]))
 
 (defn -main []
   (println "day1: ")
@@ -25,5 +26,8 @@
   (println "\nday7: ")
   (day7/solve-day7)
   (println "\nday8: ")
-  (day8/solve-day8))
+  (day8/solve-day8)
+  (println "\nday9: ")
+  (day9/solve-day9))
+
 
