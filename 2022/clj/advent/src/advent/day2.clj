@@ -50,3 +50,5 @@
                    (filter (fn [x] x)))]
     (println (calculate-score input))
     (println (calculate-score-two input))))
+
+(comment (solve-day2))

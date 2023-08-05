@@ -11,3 +11,5 @@
   (let [input (slurp "src/advent/inputs/input6.txt")]
     (println (find-marker 4 0 input))
     (println (find-marker 14 0 input))))
+
+(comment (solve-day6))

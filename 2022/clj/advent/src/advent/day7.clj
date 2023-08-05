@@ -62,3 +62,5 @@
          (filter (fn [x] (>= x delete-at-least)))
          (#(apply min %))
          (println))))
+
+(comment (solve-day7))

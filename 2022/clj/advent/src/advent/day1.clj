@@ -13,3 +13,5 @@
 (defn solve-day1 []
   (println (reduce max elf-calories))
   (println (reduce + (take 3 (sort > elf-calories)))))
+
+(comment (solve-day1))

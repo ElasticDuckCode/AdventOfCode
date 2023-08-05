@@ -82,3 +82,5 @@
     (println (get-tops new-crates))
     (println new-crates-reversed)
     (println (get-tops new-crates-reversed))))
+
+(comment (solve-day5))

@@ -52,5 +52,4 @@
         part2 (simulate-motion moves (zeros [10 2]) #{[0,0]})]
     [(count (last part1)) (count (last part2))]))
 
-(comment
-  (solve-day9))
+(comment (solve-day9))

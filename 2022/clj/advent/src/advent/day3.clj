@@ -38,3 +38,4 @@
     (println (sum-priorities input))
     (println (sum-badge-priorities input))))
 
+(comment (solve-day3))

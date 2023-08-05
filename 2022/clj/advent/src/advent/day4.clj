@@ -36,4 +36,4 @@
     (println (count-supersets parsed-input))
     (println (count-overlaps parsed-input))))
 
-
+(comment (solve-day4))
