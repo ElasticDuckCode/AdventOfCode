@@ -78,15 +78,68 @@
 
                         :else monkeys)))))
 
-(defn play-monkey-in-the-middle [monkeys])
+(defn monkey-pop-item [monkey]
+  [(first (get monkey :items))
+   (assoc monkey :items (rest (get monkey :items)))])
+
+(defn monkey-push-item [item monkey]
+  (assoc monkey :items (reverse (conj (reverse (get monkey :items)) item))))
+
+(defn monkey-increase-inspects [monkey]
+  (assoc monkey :inspects (inc (get monkey :inspects))))
+
+(defn monkey-inspect-item [monkey]
+  (let [[item monkey] (monkey-pop-item monkey)
+        inspect (get monkey :op)]
+    (if-not (nil? item)
+      [(-> item (inspect) (quot 3)) (monkey-increase-inspects monkey)]
+      [nil monkey])))
+
+(defn monkey-throw-item [item monkey monkeys]
+  (if-not (nil? item)
+    (let [testfn (get monkey :test)
+          target (if (testfn item)
+                   (get monkey :true-target)
+                   (get monkey :false-target))]
+      (assoc monkeys target (monkey-push-item item (nth monkeys target))))
+    monkeys))
+
+(defn monkeys-get-inspects [monkeys]
+  (for [monkey monkeys]
+    (get monkey :inspects)))
+
+(defn get-monkey-buisness [monkeys]
+  (reduce * (take 2 (sort > (monkeys-get-inspects monkeys)))))
+
+(defn play-monkey-turn [k monkeys]
+  (if (< k (count monkeys))
+    (let [monkey (nth monkeys k)
+          [item monkey] (monkey-inspect-item monkey)
+          monkeys (assoc monkeys k monkey)]
+      (if-not (nil? item)
+        (recur k (monkey-throw-item item monkey monkeys))
+        (recur (inc k) monkeys)))
+    monkeys))
+
+(defn play-monkey-in-the-middle
+  ([monkeys]
+   (play-monkey-turn 0 monkeys))
+
+  ([monkeys n]
+   (if (pos? n)
+     (recur
+      (play-monkey-in-the-middle monkeys)
+      (dec n))
+     monkeys)))
 
 (defn solve-day11 []
   (let [monkeys
         (->> (slurp "src/advent/inputs/input11.txt")
              (str/split-lines)
              (map str/trim)
-             (parse-monkeys))]
-    monkeys))
+             (parse-monkeys))
+        monkeys (play-monkey-in-the-middle monkeys 20)]
+    (get-monkey-buisness monkeys)))
 
 (comment (solve-day11)
          ((get (nth (solve-day11) 1) :op) 10))
