@@ -54,7 +54,6 @@
                              (last)
                              (str/trim)
                              (read-string)
-                             (#(fn [x] (= (mod x %) 0)))
                              (assoc (last monkeys) :test)
                              (conj (vec (butlast monkeys))))
 
@@ -92,17 +91,29 @@
   (let [[item monkey] (monkey-pop-item monkey)
         inspect (get monkey :op)]
     (if-not (nil? item)
-      [(-> item (inspect) (quot 3)) (monkey-increase-inspects monkey)]
+      [(inspect item) (monkey-increase-inspects monkey)]
       [nil monkey])))
 
 (defn monkey-throw-item [item monkey monkeys]
   (if-not (nil? item)
-    (let [testfn (get monkey :test)
+    (let [testfn (fn [x] (= (mod x (get monkey :test)) 0))
           target (if (testfn item)
                    (get monkey :true-target)
                    (get monkey :false-target))]
       (assoc monkeys target (monkey-push-item item (nth monkeys target))))
     monkeys))
+
+(defn gcd
+  ([a b] (if (zero? b) a (recur b (mod a b))))
+  ([a b & args] (apply gcd (cons (gcd a b) args))))
+
+(defn lcm
+  ([a b] (* (abs a) (/ (abs b) (gcd a b))))
+  ([a b & args] (apply lcm (cons (lcm a b) args))))
+
+(defn monkey-get-test-values [monkeys]
+  (for [monkey monkeys]
+    (get monkey :test)))
 
 (defn monkeys-get-inspects [monkeys]
   (for [monkey monkeys]
@@ -111,13 +122,23 @@
 (defn get-monkey-buisness [monkeys]
   (reduce * (take 2 (sort > (monkeys-get-inspects monkeys)))))
 
+(defn monkey-manage-worry-part1 [item]
+  (quot item 3))
+
+(defn monkey-manage-worry-part2 [item monkeys]
+  (mod item (apply lcm (monkey-get-test-values monkeys))))
+
 (defn play-monkey-turn [k monkeys]
   (if (< k (count monkeys))
     (let [monkey (nth monkeys k)
           [item monkey] (monkey-inspect-item monkey)
           monkeys (assoc monkeys k monkey)]
       (if-not (nil? item)
-        (recur k (monkey-throw-item item monkey monkeys))
+        (recur k (monkey-throw-item
+                  ;(monkey-manage-worry-part1 item)
+                  (monkey-manage-worry-part2 item monkeys)
+                  monkey
+                  monkeys))
         (recur (inc k) monkeys)))
     monkeys))
 
@@ -138,8 +159,10 @@
              (str/split-lines)
              (map str/trim)
              (parse-monkeys))
-        monkeys (play-monkey-in-the-middle monkeys 20)]
+        ;monkeys (play-monkey-in-the-middle monkeys 20) part1
+        monkeys (play-monkey-in-the-middle monkeys 10000)]
     (get-monkey-buisness monkeys)))
 
 (comment (solve-day11)
-         ((get (nth (solve-day11) 1) :op) 10))
+         ((get (nth (solve-day11) 1) :op) 10)
+         (gcd 5 10 15 20 25))
