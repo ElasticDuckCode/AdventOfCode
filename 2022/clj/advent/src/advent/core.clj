@@ -1,6 +1,8 @@
 (ns advent.core
-  (:gen-class))
+  (:gen-class)
+  (:require [advent.day12 :refer [solve-day12]]))
 
-(defn -main [])
+(defn -main []
+  (solve-day12))
 
 

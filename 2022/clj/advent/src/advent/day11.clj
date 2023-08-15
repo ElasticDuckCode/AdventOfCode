@@ -115,6 +115,8 @@
   (for [monkey monkeys]
     (get monkey :test)))
 
+(def monkey-get-test-values-mem (memoize monkey-get-test-values))
+
 (defn monkeys-get-inspects [monkeys]
   (for [monkey monkeys]
     (get monkey :inspects)))
@@ -126,7 +128,7 @@
   (quot item 3))
 
 (defn monkey-manage-worry-part2 [item monkeys]
-  (mod item (apply lcm (monkey-get-test-values monkeys))))
+  (mod item (apply lcm (monkey-get-test-values-mem monkeys))))
 
 (defn play-monkey-turn [k monkeys]
   (if (< k (count monkeys))
