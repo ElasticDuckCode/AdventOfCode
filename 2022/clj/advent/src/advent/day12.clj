@@ -1,107 +1,91 @@
 (ns advent.day12
   (:require [clojure.string :as str]
-            [clojure.pprint :refer [pprint]]))
+            [clojure.pprint :refer [pprint]]
+            [advent.matrix :refer [get-element infs]]))
 
-(defn get-2d-index [idx n-col] [(quot idx n-col) (mod idx n-col)])
+(defn unwrap-index [idx n-col]
+  [(quot idx n-col) (mod idx n-col)])
 
 (defn find-val [grid ch]
-  (get-2d-index (.indexOf (apply concat grid) ch) (count (get grid 0))))
+  (unwrap-index (.indexOf (apply concat grid) ch) (count (get grid 0))))
 
-(defn find-start [grid] (find-val grid \S))
+(defn grid-to-map [grid]
+  (let [m (count grid)
+        n (count (first grid))]
+    (into {}
+          (apply concat
+                 (for [i (range m)]
+                   (for [j (range n)]
+                     [[i j] (get-element grid i j)]))))))
 
-(defn find-end [grid] (find-val grid \E))
+(defn initial-distance [grid]
+  (let [m (count grid)
+        n (count (first grid))
+        [i j] (find-val grid \S)]
+    (grid-to-map
+     (assoc (infs [m n]) i (assoc (vec (repeat n ##Inf)) j 0)))))
 
-(defn get-grid-val [grid pos] (get (get grid (first pos)) (last pos)))
+(defn calculate-distance [h1 h2]
+  (let [h1 (if-not (= h1 \S) (int h1) (int \a))
+        h2 (if-not (= h2 \E) (int h2) (int \z))
+        d (- h2 h1)]
+    (if (>= d 2) ##Inf (max d 1))))
 
-(defn set-grid-val [grid pos v]
-  (assoc grid (first pos) (assoc (get grid (first pos)) (last pos) v)))
+(defn calculate-grid-distance [grid p1 p2]
+  (calculate-distance (get-element grid (first p1) (last p1))
+                      (get-element grid (first p2) (last p2))))
 
-(defn sort-dists [dists]
-  (into
-   (sorted-map-by (fn [k1 k2] (compare [(get dists k1) k1]
-                                       [(get dists k2) k2])))
-   dists))
+(defn update-distance [grid prev dist-map neighbor curr dist]
+  (if (contains? dist-map neighbor)
+    (let [old (get dist-map neighbor)
+          new (+ dist (calculate-grid-distance grid curr neighbor))]
+      (if (< new old)
+        [(assoc dist-map neighbor new) (assoc prev neighbor curr)]
+        [dist-map prev]))
+    [dist-map prev]))
 
-(defn init-dists [grid start]
-  (sort-dists
-   (assoc (into {} (for [i (range (count grid))
-                         j (range (count (first grid)))]
-                     [[i j] ##Inf]))
-          start 0)))
+(defn follow-shortest-path [point prev path]
+  (if-not (nil? point)
+    (recur (get prev point) prev (conj path point))
+    path))
 
-(defn visit-closest-unseen [dists seen]
-  (if (contains? seen (first (first dists)))
-    (recur (dissoc dists (first (first dists))) seen)
-    (first (first dists))))
-
-(defn calc-distance [cval nval]
-  (if (or (nil? cval) (nil? nval))
-    ##Inf
-    (let [cint (if (= cval \S) 0 (- (int cval) (int \`)))
-          nint (if (= nval \E) cint (- (int nval) (int \`)))
-          dist (- nint cint)]
-      (if (<= dist 1) dist ##Inf))))
-
-(defn update-dist [dists prev seen pos value curr]
-  (if-not (contains? seen pos)
-    (if (contains? dists pos)
-      (if (< value (get dists pos))
-        [(assoc dists pos value), (assoc prev pos curr)]
-        [dists prev])
-      [dists prev])
-    [dists prev]))
-
-(defn update-dists [grid seen curr prev dists]
-  (let [left (mapv + curr [0 -1])
-        right (mapv + curr [0 1])
-        up (mapv + curr [-1 0])
-        down (mapv + curr [1 0])
-        ldist (+ (get dists curr) (calc-distance
-                                   (get-grid-val grid curr)
-                                   (get-grid-val grid left)))
-        rdist (+ (get dists curr) (calc-distance
-                                   (get-grid-val grid curr)
-                                   (get-grid-val grid right)))
-        udist (+ (get dists curr) (calc-distance
-                                   (get-grid-val grid curr)
-                                   (get-grid-val grid up)))
-        ddist (+ (get dists curr) (calc-distance
-                                   (get-grid-val grid curr)
-                                   (get-grid-val grid down)))]
-    (->> [dists, prev]
-         (apply #(update-dist %1 %2 seen left ldist curr))
-         (apply #(update-dist %1 %2 seen right rdist curr))
-         (apply #(update-dist %1 %2 seen up udist curr))
-         (apply #(update-dist %1 %2 seen down ddist curr))
-         (apply (fn [dists, prev] [(sort-dists dists) prev])))))
-
-(defn climb-mountain
-  ([grid]
-   (let [start (find-start grid)
-         end (find-end grid)]
-     (climb-mountain grid end {} {start nil} (init-dists grid start))))
-  ([grid goal seen prev dists]
-   (let [curr (visit-closest-unseen dists seen)]
-     (if (= curr goal)
-       dists
-       (let [seen (assoc seen curr true)
-             [dists prev] (update-dists grid seen curr prev dists)
-             dists (dissoc dists curr)]
-         (pprint dists)
-         (pprint goal)
-         (recur grid goal seen prev dists))))))
+(defn dijkstra-hillclimb [grid end dist-map prev]
+  (if (pos? (count dist-map))
+    (let [[m n] [(count grid) (count (first grid))]
+          [[i j] dist] (apply min-key second dist-map)
+          dist-map (dissoc dist-map [i j])
+          [dist-map prev] (->> [dist-map prev]
+                               (apply #(if (< (inc i) m)
+                                         (update-distance grid %2 %1 [(inc i) j] [i j] dist)
+                                         [%1 %2]))
+                               (apply #(if (>= (dec i) 0)
+                                         (update-distance grid %2 %1 [(dec i) j] [i j] dist)
+                                         [%1 %2]))
+                               (apply #(if (< (inc j) n)
+                                         (update-distance grid %2 %1 [i (inc j)] [i j] dist)
+                                         [%1 %2]))
+                               (apply #(if (>= (dec j) 0)
+                                         (update-distance grid %2 %1 [i (dec j)] [i j] dist)
+                                         [%1 %2])))]
+      (if (= [i j] end)
+        (follow-shortest-path end prev [])
+        (recur grid end dist-map prev)))
+    nil))
 
 (defn solve-day12 []
-  (let [grid (->> (slurp "src/advent/inputs/input12_example.txt")
+  (let [grid (->> (slurp "src/advent/inputs/input12.txt")
                   (str/split-lines)
-                  (mapv char-array))]
-    (climb-mountain grid)))
+                  (mapv char-array))
+        path (dijkstra-hillclimb grid
+                                 (find-val grid \E)
+                                 (initial-distance grid)
+                                 {(find-val grid \S) nil})]
+    (dec (count path))))
 
 (comment (solve-day12)
-         (calc-distance \S \a)
-         (calc-distance \S \E)
-         (calc-distance \d \E)
-         (calc-distance \S \b)
-         (calc-distance \a \c)
-         (< ##Inf ##Inf))
+         (calculate-distance \a \a)
+         (calculate-distance \a \b)
+         (calculate-distance \a \c)
+         (repeat 10 ##Inf)
+         (infs [1 10]))
 

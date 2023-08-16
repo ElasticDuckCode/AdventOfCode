@@ -24,6 +24,9 @@
 (defn zeros [[m, n]]
   (vec (repeat m (vec (repeat n 0)))))
 
+(defn infs [[m, n]]
+  (vec (repeat m (vec (repeat n ##Inf)))))
+
 (defn remove-at [v ith]
   (into (subvec v 0 ith) (subvec v (inc ith))))
 
